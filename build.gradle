@@ -5,7 +5,7 @@ plugins {
 }
 
 group = 'com.cte4.mac'
-version = '0.0.1-SNAPSHOT'
+version = '1.0'
 sourceCompatibility = '8'
 
 configurations {
@@ -14,13 +14,21 @@ configurations {
 	}
 }
 
-repositories {
-	mavenCentral()
+allprojects {
+    repositories {
+        maven { url 'https://maven.aliyun.com/repository/public/' }
+		maven { url 'https://maven.aliyun.com/repository/spring/'}
+        mavenLocal()
+        mavenCentral()
+    }
 }
 
 dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-actuator'
-	implementation 'org.springframework.boot:spring-boot-starter-freemarker'
+	compile 'org.jboss.byteman:byteman:4.0.13'
+	compile 'org.jboss.byteman:byteman-install:4.0.13'
+	compile 'org.jboss.byteman:byteman-submit:4.0.13'
+	compileOnly 'org.projectlombok:lombok:1.18.20'
 	compileOnly 'org.projectlombok:lombok'
 	annotationProcessor 'org.projectlombok:lombok'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
