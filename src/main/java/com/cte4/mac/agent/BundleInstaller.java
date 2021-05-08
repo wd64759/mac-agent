@@ -1,26 +1,32 @@
 package com.cte4.mac.agent;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.IOException;
 import java.net.InetAddress;
 import java.net.ServerSocket;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 
 import javax.net.ServerSocketFactory;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jboss.byteman.agent.install.Install;
 import org.jboss.byteman.agent.submit.Submit;
 
-import lombok.extern.log4j.Log4j2;
-
-@Log4j2
 public class BundleInstaller {
 
+    static Logger log = LogManager.getLogger(BundleInstaller.class);
     private final Random random = new Random(System.nanoTime());
     private int port;
     private String processId;
     private String host;
     private boolean addtoBoot;
+    private Submit installer;
 
     private BundleInstaller(String pid) {
         this.processId = pid;
@@ -31,6 +37,7 @@ public class BundleInstaller {
             if (!Install.isAgentAttached(this.processId)) {
                 this.findAvaliablePort();
                 Install.install(this.processId, this.addtoBoot, this.host, this.port, this.props());
+                installer = new Submit(this.host, this.port);
             }
         } catch (Exception e) {
             log.error("fail to attach agent", e);
@@ -42,12 +49,40 @@ public class BundleInstaller {
         return new BundleInstaller(pid).init();
     }
 
+    /**
+     * To install bundles 1by1
+     * @param bundles
+     */
     public void applyBundles(List<File> bundles) {
-        
+        if(this.installer == null) {
+            log.error("..exiting for bundle installer not initiated");
+            return;
+        }
+        for(File bundleFile: bundles) {
+            String bundleName = bundleFile.getName();
+            try {
+                String bundleScript = this.loadBundleScript(bundleFile);
+                ByteArrayInputStream is = new ByteArrayInputStream(bundleScript.getBytes());
+                String result = this.installer.addRulesFromResources(Arrays.asList(is));
+                log.info(String.format("bundle(%s) is installed successfully, status:%s", bundleName, result));
+            } catch (Exception e) {
+                log.error(String.format("bundle(%s) failed to install", bundleName), e);
+            }
+        }
     }
 
     public void detachBundle(List<File> bundles) {
+    }
 
+    private String loadBundleScript(File bundleFile) throws IOException {
+        String fLoc = bundleFile.getAbsolutePath();
+        try {
+            String script = Files.readString(Paths.get(fLoc));
+            return script;
+        } catch (IOException e) {
+            log.error(String.format("fail to load script from bundle file:%s", fLoc));
+            throw e;
+        }
     }
 
     /**
