@@ -1,0 +1,19 @@
+RULE SPI_FNC at entry
+CLASS com.cte4.mac.example.controller.CustomerServiceController
+METHOD getCusomer
+HELPER com.cte4.mac.exposer.rules.function.SPIHelper
+AT ENTRY
+IF TRUE
+DO 
+    enableLatency($this.meterRegistery);
+ENDRULE
+
+RULE SPI_FNC at exit
+CLASS com.cte4.mac.example.controller.CustomerServiceController
+METHOD getCusomer
+HELPER com.cte4.mac.exposer.rules.function.SPIHelper
+AT EXIT
+IF TRUE
+DO 
+    disableLatency();
+ENDRULE

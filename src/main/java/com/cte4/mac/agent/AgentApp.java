@@ -14,7 +14,8 @@ public class AgentApp {
 
     static Logger log = LogManager.getLogger(AgentApp.class);
 
-    static final String BUNDLES_LOC = System.getProperty("bundles.dir", "/mnt/d/code/e4/bundles");
+    static final String BUNDLES_LOC = System.getProperty("bundles.list", "./sample/bundles");
+    static final String BUNDLES_LIB = System.getProperty("bundles.lib", "/mnt/d/code/e4/bundles.lib");
     static final String BUNDLE_POSTFIX = ".bnl";
     static final String ACTION_ENABLE = "enable";
     static final String ACTION_DISABLE = "disable";
@@ -34,6 +35,11 @@ public class AgentApp {
 
         // do some validation
         File bundleFolder = new File(BUNDLES_LOC);
+        if(!bundleFolder.isDirectory()) {
+            log.error("invalid bundle repo:" + BUNDLES_LOC);
+            return;
+        }
+        
         List<File> bundleFiles = Arrays.asList(bundleFolder.listFiles(new FileFilter() {
             @Override
             public boolean accept(File pathname) {
