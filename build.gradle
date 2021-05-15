@@ -31,6 +31,10 @@ dependencies {
 	compile 'org.jboss.byteman:byteman:4.0.13'
 	compile 'org.jboss.byteman:byteman-install:4.0.13'
 	compile 'org.jboss.byteman:byteman-submit:4.0.13'
+  // to be moved into mac-exposure in future
+  compile 'org.freemarker:freemarker:2.3.23'
+
+  implementation files('../mac-annotation/build/libs/mac-annotation-1.0.jar')
 	testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.7.0'
 	testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.0'
 }

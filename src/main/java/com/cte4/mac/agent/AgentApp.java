@@ -31,6 +31,7 @@ public class AgentApp {
         List<String> argsList = Arrays.asList(args);
         String processID = args[0];
         String action = args[1];
+        // reserved for handle specific bundles
         List<String> bundles = argsList.size() > 2 ? argsList.subList(3, argsList.size()) : new ArrayList<>();
 
         // do some validation
