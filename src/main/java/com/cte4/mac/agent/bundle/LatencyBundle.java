@@ -9,23 +9,22 @@ import com.e4.mac.annotation.LatencySPI;
 import com.e4.mac.apt.processor.model.AnnotationType;
 import com.e4.mac.apt.processor.model.ElementDescriptor;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import freemarker.template.Configuration;
 import freemarker.template.Template;
 
 /**
  * Annotation parser for latency SLI generation
  */
-public class LatencyBundle implements MacBundle {
-    private static Logger log = LogManager.getLogger(LatencyBundle.class);
+public class LatencyBundle extends MacBundle {
     final static String theAnnotation = LatencySPI.class.getName();
     final String bundleTpl = "Latency.bnl";
+    final String bundleHelper = "bundle-latency-1.0.jar";
+    private Map<String, Object> dataModel;
     
     private ElementDescriptor element;
     public LatencyBundle(ElementDescriptor element) {
         this.element = element;
+        this.dataModel = new HashMap<>();
     }
     public static Optional<MacBundle> accept(ElementDescriptor element) {
         // only accept annotation on method level
@@ -33,7 +32,7 @@ public class LatencyBundle implements MacBundle {
         if (element.getAnnotationType().equals(AnnotationType.METHOD)) {
             if(element.getAnnotations().stream().filter(t->t.getName().equals(theAnnotation)).findAny().isPresent()){
                 latencyBundle = new LatencyBundle(element);
-                latencyBundle.buildModel();
+                latencyBundle.buildDataModel();
             }
         }
         return Optional.ofNullable(latencyBundle);
@@ -47,7 +46,7 @@ public class LatencyBundle implements MacBundle {
         try (StringWriter bytebuf = new StringWriter()) {
             Template template = cfg.getTemplate(this.bundleTpl);
             Map<String, Object> data = new HashMap<>();
-            data.put("data", this.buildModel());
+            data.put("data", this.dataModel);
             template.process(data, bytebuf);
             return bytebuf.toString();
         } catch (Exception e) {
@@ -58,11 +57,15 @@ public class LatencyBundle implements MacBundle {
     /**
      * To convert the general annotation configuration as specific model for template operation
      */
-    protected Map<String, Object> buildModel() {
-        Map<String, Object> model = new HashMap<>();
-        model.put("mtdName", this.element.getName());
-        model.put("clzName", this.element.getParent().getName());
-        return model;
+    protected void buildDataModel() {
+        String methodWithSign = getSignedMethodName(this.element.getName());
+        dataModel.put("mtdName", methodWithSign);
+        dataModel.put("clzName", this.element.getParent().getName());
+    }
+
+    @Override
+    public Optional<String> getBundleHelper() {
+        return Optional.of(this.bundleHelper);
     }
 
 }

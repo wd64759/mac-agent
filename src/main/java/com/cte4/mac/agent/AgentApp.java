@@ -1,11 +1,10 @@
 package com.cte4.mac.agent;
 
-import java.io.File;
-import java.io.FileFilter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
+
+import com.cte4.mac.agent.bundle.BundleProcessException;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -14,9 +13,6 @@ public class AgentApp {
 
     static Logger log = LogManager.getLogger(AgentApp.class);
 
-    static final String BUNDLES_LOC = System.getProperty("bundles.list", "./sample/bundles");
-    static final String BUNDLES_LIB = System.getProperty("bundles.lib", "/mnt/d/code/e4/bundles.lib");
-    static final String BUNDLE_POSTFIX = ".bnl";
     static final String ACTION_ENABLE = "enable";
     static final String ACTION_DISABLE = "disable";
 
@@ -31,43 +27,46 @@ public class AgentApp {
         List<String> argsList = Arrays.asList(args);
         String processID = args[0];
         String action = args[1];
-        // reserved for handle specific bundles
-        List<String> bundles = argsList.size() > 2 ? argsList.subList(3, argsList.size()) : new ArrayList<>();
-
-        // do some validation
-        File bundleFolder = new File(BUNDLES_LOC);
-        if(!bundleFolder.isDirectory()) {
-            log.error("invalid bundle repo:" + BUNDLES_LOC);
-            return;
-        }
-        
-        List<File> bundleFiles = Arrays.asList(bundleFolder.listFiles(new FileFilter() {
-            @Override
-            public boolean accept(File pathname) {
-                return pathname.getName().endsWith(BUNDLE_POSTFIX);
-            }
-        }));
-        if (bundles.size() > 0) {
-            bundleFiles = bundleFiles.stream().filter((f) -> bundles.contains(f.getName()))
-                    .collect(Collectors.toList());
-        }
-        if (bundleFiles.size() == 0) {
-            log.warn("not found any proper bundle files");
-            return;
-        }
 
         // apply changes
-        BundleInstaller installer = BundleInstaller.buildInstaller(processID);
-        switch (action.toLowerCase()) {
-            case ACTION_ENABLE:
-                installer.applyBundles(bundleFiles);
-                break;
-            case ACTION_DISABLE:
-                installer.detachBundle(bundleFiles);
-                break;
-            default:
-                log.error(String.format("invalud action, only accept %s and %s", ACTION_ENABLE, ACTION_DISABLE));
-                break;
+        try {
+            BundleInstaller installer = BundleInstaller.buildInstaller(processID);
+            BundleGen bundleRepo = BundleGen.getInstance();
+            bundleRepo.process();
+            List<String> bundleCntList = bundleRepo.getBundleContents();
+
+            // reserved for handle specific bundle to apply
+            List<String> specBundles = argsList.size() > 2 ? argsList.subList(3, argsList.size()) : new ArrayList<>();
+            if (specBundles.size() > 0) {
+                // TODO: rule name design example - SLI name + Class name + method with script
+                // .substring(0, 50)
+                // bundles = specBundles.stream().filter((f) -> bundles.contains(f.getName()))
+                // .collect(Collectors.toList());
+            }
+            if (bundleCntList.size() == 0) {
+                log.warn("not found any proper bundle files");
+                return;
+            }
+            bundleRepo.getBundleHelpers().stream().forEach(helper -> {
+                log.info("install helper - " + helper);
+                installer.applyBundleHelper(helper);
+            });
+            switch (action.toLowerCase()) {
+                case ACTION_ENABLE:
+                    installer.applyBundleCnt(bundleCntList);
+                    break;
+                case ACTION_DISABLE:
+                    installer.detachBundle(bundleCntList);
+                    break;
+                default:
+                    log.error(String.format("invalud action, only accept %s and %s", ACTION_ENABLE, ACTION_DISABLE));
+                    break;
+            }
+
+        } catch (BundleProcessException e) {
+            e.printStackTrace();
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 }

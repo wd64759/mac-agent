@@ -1,7 +1,7 @@
 RULE SPI_FNC at entry
 CLASS ${data.clzName}
 METHOD ${data.mtdName}
-HELPER com.cte4.mac.exposer.rules.function.SPIHelper
+HELPER com.cte4.mac.bundle.LatencyHelper
 AT ENTRY
 IF TRUE
 DO 
@@ -11,7 +11,7 @@ ENDRULE
 RULE SPI_FNC at exit
 CLASS ${data.clzName}
 METHOD ${data.mtdName}
-HELPER com.cte4.mac.exposer.rules.function.SPIHelper
+HELPER com.cte4.mac.bundle.LatencyHelper
 AT EXIT
 IF TRUE
 DO 

@@ -50,15 +50,15 @@ public class BundleInstaller {
     }
 
     /**
-     * To install bundles 1by1
+     * To install bundles
      * @param bundles
      */
-    public void applyBundles(List<File> bundles) {
+    public void applyBundleFiles(List<File> bundleFileList) {
         if(this.installer == null) {
             log.error("..exiting for bundle installer not initiated");
             return;
         }
-        for(File bundleFile: bundles) {
+        for(File bundleFile: bundleFileList) {
             String bundleName = bundleFile.getName();
             try {
                 String bundleScript = this.loadBundleScript(bundleFile);
@@ -71,7 +71,46 @@ public class BundleInstaller {
         }
     }
 
-    public void detachBundle(List<File> bundles) {
+    /**
+     * To install bundles
+     * @param bundleCntList
+     */
+    public void applyBundleCnt(List<String> bundleCntList) {
+        if(this.installer == null) {
+            log.error("..exiting for bundle installer not initiated");
+            return;
+        }
+        for(String bundleCnt: bundleCntList) {
+            try {
+                log.info("apply checkpoint - " + bundleCnt);
+                ByteArrayInputStream is = new ByteArrayInputStream(bundleCnt.getBytes());
+                String result = this.installer.addRulesFromResources(Arrays.asList(is));
+                log.info(String.format("bundle(?) is installed successfully, status:%s", result));
+            } catch (Exception e) {
+                log.error(String.format("bundle(?) failed to install"), e);
+            }
+        }
+    }
+
+    /**
+     * To detach bundles
+     * @param bundleCntList
+     */
+    public void detachBundle(List<String> bundleCntList) {
+        // TODO
+    }
+
+    /**
+     * 
+     * @param helperJar
+     */
+    public void applyBundleHelper(String helperJar) {
+        try {
+            String result = this.installer.addJarsToSystemClassloader(Arrays.asList(helperJar));
+            log.info(String.format("mac exposer bundle is attached, result:%s", result));
+        } catch (Exception e) {
+            log.error(String.format("fail to attach bundle helper", e));
+        }
     }
 
     private String loadBundleScript(File bundleFile) throws IOException {

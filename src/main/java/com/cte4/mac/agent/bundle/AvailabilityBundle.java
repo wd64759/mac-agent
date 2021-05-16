@@ -6,7 +6,7 @@ import com.e4.mac.apt.processor.model.ElementDescriptor;
 
 import freemarker.template.Configuration;
 
-public class AvailabilityBundle implements MacBundle {
+public class AvailabilityBundle extends MacBundle {
 
     public static Optional<MacBundle> accept(ElementDescriptor element) {
         // TODO
@@ -16,6 +16,11 @@ public class AvailabilityBundle implements MacBundle {
     @Override
     public String buildBundle(Configuration cfg) throws BundleProcessException {
         // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public Optional<String> getBundleHelper() {
         return null;
     }
     
